@@ -12,7 +12,7 @@ https://www.python.org/downloads/windows/
 
 * Download Windows installer (64-bit)
 
-## git clone
+## サンプルリポジトリの設定
 本リポジトリをクローンする
 
 PowerShellを起動する（以後```で囲まれた箇所はPowerShellで実行）
@@ -32,3 +32,18 @@ Pythonパッケージをインストール
 pip install -r requirements.txt
 ```
 
+## サンプル画像のダウンロード
+サンプル画像をanomalib-workshop-202606\dataフォルダの下にダウンロードし解凍
+
+https://github.com/cm-koga/assets/releases/download/workshop/wood.zip
+
+以下のようなフォルダ構成になります
+
+```
+anomalib-workshop-202606/
+  data/
+    wood/
+      test/
+      test_gt/
+      train/
+```
