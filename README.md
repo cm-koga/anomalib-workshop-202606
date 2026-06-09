@@ -21,21 +21,16 @@ git clone https://github.com/cm-koga/anomalib-workshop-202606
 cd anomalib-workshop-202606
 ```
 
-Python仮想環境を作成
+初期設定処理を行う
 ```
-py -m venv venv
-.\venv\Scripts\Activate.ps1
-```
-
-Pythonパッケージをインストール
-```
-pip install -r requirements.txt
+setup.ps1
 ```
 
 ## サンプル画像のダウンロード
-サンプル画像をanomalib-workshop-202606\dataフォルダの下にダウンロードし解凍
-
-https://github.com/cm-koga/assets/releases/download/workshop/wood.zip
+以下を実行してサンプル画像（木材データ）をダウンロードします。
+```
+python .\download_dataset.py
+```
 
 以下のようなフォルダ構成になります
 
@@ -47,3 +42,11 @@ anomalib-workshop-202606/
       test_gt/
       train/
 ```
+
+# サンプルコードの実行前に
+サンプルコードを実行する前に、ルートフォルダ（anomalib-workshop-202606フォルダ）に移動し以下を実行してください。
+
+```
+.\init.ps1
+```
+
