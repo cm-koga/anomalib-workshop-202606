@@ -7,73 +7,110 @@ image_dir = Path("../data/wood/test_min")
 mask_dir = Path("../data/wood/test_min_gt")
 
 brush_size = 12
+image_exts = [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"]
+
 mask_dir.mkdir(parents=True, exist_ok=True)
 
-image_exts = [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"]
 image_paths = sorted([
     p for p in image_dir.iterdir()
     if p.suffix.lower() in image_exts
 ])
 
 drawing = False
+erase_mode = False
+
+
+def update_display(image, mask, display):
+    overlay = image.copy()
+
+    # マスク部分を赤く表示
+    overlay[mask > 0] = (0, 0, 255)
+
+    blended = cv2.addWeighted(image, 0.7, overlay, 0.3, 0)
+    display[:] = blended
 
 
 def mouse_callback(event, x, y, flags, param):
-    global drawing
+    global drawing, erase_mode
 
     image, mask, display = param
 
+    # 左クリック：描画開始
     if event == cv2.EVENT_LBUTTONDOWN:
         drawing = True
+        erase_mode = False
+        cv2.circle(mask, (x, y), brush_size, 255, -1)
+        update_display(image, mask, display)
 
-    elif event == cv2.EVENT_LBUTTONUP:
+    # 右クリック：消去開始
+    elif event == cv2.EVENT_RBUTTONDOWN:
+        drawing = True
+        erase_mode = True
+        cv2.circle(mask, (x, y), brush_size, 0, -1)
+        update_display(image, mask, display)
+
+    # ボタンを離したら描画終了
+    elif event in [cv2.EVENT_LBUTTONUP, cv2.EVENT_RBUTTONUP]:
         drawing = False
 
-    elif event == cv2.EVENT_MOUSEMOVE:
-        if drawing:
+    # ドラッグ中
+    elif event == cv2.EVENT_MOUSEMOVE and drawing:
+        if erase_mode:
+            cv2.circle(mask, (x, y), brush_size, 0, -1)
+        else:
             cv2.circle(mask, (x, y), brush_size, 255, -1)
 
-            # 表示用：マスク部分を赤く重ねる
-            overlay = image.copy()
-            overlay[mask > 0] = (0, 0, 255)
-            blended = cv2.addWeighted(image, 0.7, overlay, 0.3, 0)
-            display[:] = blended
+        update_display(image, mask, display)
 
 
-for image_path in image_paths:
-    image = cv2.imread(str(image_path))
+def main():
+    if not image_dir.exists():
+        print(f"画像フォルダが存在しません: {image_dir}")
+        return
 
-    if image is None:
-        print(f"読み込み失敗: {image_path}")
-        continue
+    if len(image_paths) == 0:
+        print("画像が見つかりませんでした")
+        return
 
-    h, w = image.shape[:2]
+    window_name = "Mask Tool  Left: draw / Right: erase / Enter: save / ESC: exit"
 
-    # 1chのマスク画像
-    mask = np.zeros((h, w), dtype=np.uint8)
+    for image_path in image_paths:
+        image = cv2.imread(str(image_path))
 
-    display = image.copy()
+        if image is None:
+            print(f"読み込み失敗: {image_path}")
+            continue
 
-    window_name = "Mask Tool - Enter: save next / ESC: exit"
-    cv2.namedWindow(window_name)
-    cv2.setMouseCallback(window_name, mouse_callback, [image, mask, display])
+        h, w = image.shape[:2]
 
-    while True:
-        cv2.imshow(window_name, display)
-        key = cv2.waitKey(20) & 0xFF
+        mask = np.zeros((h, w), dtype=np.uint8)
+        display = image.copy()
 
-        # Enter
-        if key == 13:
-            save_path = mask_dir / image_path.name
-            cv2.imwrite(str(save_path), mask)
-            print(f"保存: {save_path}")
-            break
+        cv2.namedWindow(window_name, cv2.WINDOW_AUTOSIZE)
+        cv2.setMouseCallback(window_name, mouse_callback, [image, mask, display])
 
-        # ESC
-        elif key == 27:
-            print("中断しました")
-            cv2.destroyAllWindows()
-            raise SystemExit
+        print(f"編集中: {image_path.name}")
 
-cv2.destroyAllWindows()
-print("完了しました")
+        while True:
+            cv2.imshow(window_name, display)
+            key = cv2.waitKey(20) & 0xFF
+
+            # Enter
+            if key == 13:
+                save_path = mask_dir / image_path.name
+                cv2.imwrite(str(save_path), mask)
+                print(f"保存: {save_path}")
+                break
+
+            # ESC
+            elif key == 27:
+                print("中断しました")
+                cv2.destroyAllWindows()
+                return
+
+    cv2.destroyAllWindows()
+    print("完了しました")
+
+
+if __name__ == "__main__":
+    main()
