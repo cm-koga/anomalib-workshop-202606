@@ -50,3 +50,10 @@ anomalib-workshop-202606/
 .\init.ps1
 ```
 
+# トラブルシューティング
+## ModuleNotFoundError: No module named FrEIA
+Pythonスクリプト実行時に表題のエラーメッセージが出たとき、FrEIAを再インストール
+```
+pip uninstall FrEIA
+pip install FrEIA --no-cache-dir --force-reinstall
+```
